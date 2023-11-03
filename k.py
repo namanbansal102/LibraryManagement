@@ -1,16 +1,5 @@
-import json
-
-# Your incoming data with single quotes
-data_with_single_quotes = "{'bookid': 23, 'dateOfIssued': 'erere'}"
-
-# Remove single quotes from the beginning and end of the string
-data = data_with_single_quotes.strip("'")
-
-# Replace single quotes with double quotes
-data = data.replace("'", '"')
-
-# Load the JSON data
-l = json.loads(data)
-
-print(l)
-print("Type of l is", type(l))
+from datetime import datetime,time,timedelta
+today_date=datetime.now()
+new="23/5/2023"
+new=datetime.strptime(new,'%d/%m/%Y')
+print(new)

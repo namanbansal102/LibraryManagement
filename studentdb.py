@@ -22,14 +22,11 @@ def returnStudentBookData(stuid,booKData):
         p=json.loads(n)
         print("Type of P is",type(p))
         p.remove(booKData)
-
-        
         print("The Value of P is",p)
         p=json.dumps(p)
         print("Type of P  after is",type(p))
         query = f'UPDATE student SET books = %s WHERE id = {stuid}'
         mycursor.execute(query, (p,))
-
         conn.commit()
     except Exception as e:
         print(e)
@@ -42,14 +39,11 @@ def updateStudentData(stuid,booKData):
         n=mycursor.fetchone()[0]
         print(type(n))
         n = n.strip("'")
-
         # Replace single quotes with double quotes
         n = n.replace("'", '"')
         p=json.loads(n)
         print("Type of P is",type(p))
-        p.append(booKData)
-
-        
+        p.append(booKData) 
         print("The Value of P is",p)
         p=json.dumps(p)
         print("Type of P  after is",type(p))
@@ -64,37 +58,40 @@ def returnSpecifictudentData(id):
     print("Specific Student Data is Running")
     mycursor.execute(f"select * from student WHERE id={id}")
     data=mycursor.fetchall()
+    
     # print("The Returned Data is",data)
     inf_details_ofspecificStudent=data[0][0:4]
+    print("the Inf Data is",inf_details_ofspecificStudent)
     bookDetails_of_specificStudent=json.loads(data[0][4])
-    print(bookDetails_of_specificStudent)
-    print(data)
+    print("the bookDetails Data is",bookDetails_of_specificStudent)
     lst=[]
-    print("ads")
     if len(bookDetails_of_specificStudent)!=0:
         for i in range(len(bookDetails_of_specificStudent)):
-            lst.append(bookDetails_of_specificStudent[i].get('bookid'))
-        print(lst)
-        lst=tuple(lst)
-        print(lst)
+            lst.append([bookDetails_of_specificStudent[i].get('bookid'),bookDetails_of_specificStudent[i].get('dateOfIssued')])
+        print("The Value of lst is ",lst)
+        lst=tuple(lst[i][0] for i in range(len(lst)))
         if len(lst)==1:
             query=f'SELECT bookName from books where bookId={lst[0]}'
         else:
             query=f'SELECT bookName from books where bookId in {lst}'
 
-        conn.commit()
         mycursor.execute(query)
         dot=mycursor.fetchall()
+        conn.commit()
+        print("The Value of Dot is",dot)
         modified_dot=dict()
+        print("The Value of lst is",lst)
         for id,name in zip(lst,dot):
+            print("The Value of id is",id)
+            print("The Value of name is",name)
             modified_dot[id]=name[0]
+        print("The Value of Modified Dot is",modified_dot)
         new=[]
         new.append(inf_details_ofspecificStudent[0])
         new.append(inf_details_ofspecificStudent[1])
         new.append(inf_details_ofspecificStudent[2])
         new.append(inf_details_ofspecificStudent[3])
         new.append(modified_dot)
-        print(new)
         return new
     else:
         new=[]
@@ -102,11 +99,25 @@ def returnSpecifictudentData(id):
         new.append(inf_details_ofspecificStudent[1])
         new.append(inf_details_ofspecificStudent[2])
         new.append(inf_details_ofspecificStudent[3])
-        print(new)
-        return new
-        
+        return new      
+def specificStudentDatawithDate(id):
+    print("Specific Student Data Date Issued is Running")
+    mycursor.execute(f"select * from student WHERE id={id}")
+    data=mycursor.fetchall()
+    conn.commit()
     
-           
+    # print("The Returned Data is",data)
+    inf_details_ofspecificStudent=data[0][0:4]
+    print("the Inf Data is",inf_details_ofspecificStudent)
+    bookDetails_of_specificStudent=json.loads(data[0][4])
+    print("the bookDetails Data is",bookDetails_of_specificStudent)
+    lst=[inf_details_ofspecificStudent,bookDetails_of_specificStudent]
+    kl=[]
+    for item in lst[1]:
+        kl.append(item.get('dateOfIssued'))
+    return kl
+
+
 def fetchStudentData():
     mycursor.execute("select * from student")
     showResult=mycursor.fetchall()
@@ -119,5 +130,7 @@ if __name__=="__main__":
     # insertStudentData(582,"Naman Bansal","Sirsa",906,'[{"bookId":23,"dateofIssued":"04/56/45"}]')
     # updateStudentData(582,{"bookId":348,"dateofIssued":"09/45/45"})
     # print(fetchStudentData())
-    returnSpecifictudentData(103)
+    print(returnSpecifictudentData(789))
+    # print(specificStudentDatawithDate(789))
+    
         

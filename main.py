@@ -1,11 +1,12 @@
 from tkinter import *
+import tkinter.messagebox as tmsg
 import sys
 import time
 from datetime import datetime,date,timedelta
 todays_date=date.today()
 dt=datetime.now()
 from db import fetchData,insertData,updateBook,returnUpdateBook
-from studentdb import insertStudentData,fetchStudentData,updateStudentData,returnStudentBookData,returnSpecifictudentData
+from studentdb import insertStudentData,fetchStudentData,updateStudentData,returnStudentBookData,returnSpecifictudentData,specificStudentDatawithDate
 root=Tk()
 #Creating a Library Management System
 root.geometry("3000x700")
@@ -20,6 +21,10 @@ studentName=StringVar()
 address=StringVar()
 mobileNo=IntVar()
 dateIssued=StringVar()
+def changeLabel(statement):
+    my_labelinfo.config(text=statement)
+    time.sleep(3)
+    my_labelinfo.config(text="")
 def addBook():
     print(bookenteridvar.get(),bookenternamevar.get(),bookenterquantityvar.get())
     res=insertData(int(bookenteridvar.get()),str(bookenternamevar.get()),int(bookenterquantityvar.get()),0)
@@ -55,31 +60,47 @@ def makeElement(title,row,col,runvar):
 def exitfunc():
     pass
 #Issue Book Function is Started
-def issueBook():
-    print("issue Button is Clicked")
-    for bookdp in fetchData():
-        if bookdp[0]==bookid.get():
-            print("Book is Present")
-            if bookdp[2]==bookdp[3]:
-                print("Books are All Issued")
-                break
-            
-            else:
-                updateBook(bookid.get())
-                for data in fetchStudentData():
-                    print("The Value of data is",data)
-                    if data[0]==studentId.get():
-                        print(data[0])
-                        print("Student Id Get equal to enter  Inout Id")
-                        updateStudentData(studentId.get(),{"bookid":bookid.get(),"dateOfIssued":dateIssued.get()})
-                        break
-                else:
-                    print(studentId.get(),studentName.get(),address.get(),mobileNo.get(),{"bookid":bookid.get(),"dateOfIssued":dateIssued.get()})
-                    insertStudentData(studentId.get(),studentName.get(),address.get(),mobileNo.get(),str([{"bookid":bookid.get(),"dateOfIssued":dateIssued.get()}]))
-            break
+def issueBookfunc():
+        print("issue Button is Clicked")
+        for bookdp in fetchData():
+            if bookdp[0]==bookid.get():
+                print("Book is Present")
+                if bookdp[2]==bookdp[3]:
+                    print("Books are All Issued")
+                    changeLabel("Books are All Issued")
+                    break
                 
-    else:
-        print("Sorry Unable To Find Book With Respective Book Id")
+                else:
+                    updateBook(bookid.get())
+                    for data in fetchStudentData():
+                        print("The Value of data is",data)
+                        if data[0]==studentId.get():
+                            print(data[0])
+                            print("Student Id Get equal to enter  Inout Id")
+                            
+                            updateStudentData(studentId.get(),{"bookid":bookid.get(),"dateOfIssued":dateIssued.get()})
+                            break
+                    else:
+                        print(studentId.get(),studentName.get(),address.get(),mobileNo.get(),{"bookid":bookid.get(),"dateOfIssued":dateIssued.get()})
+                        get_id_books=returnSpecifictudentData[4]
+                        for key,value in get_id_books.items():
+                            if key==bookid.get():
+                                changeLabel("Book is Already Issued By Student")
+                                break
+                        else:
+                            insertStudentData(studentId.get(),studentName.get(),address.get(),mobileNo.get(),str([{"bookid":bookid.get(),"dateOfIssued":dateIssued.get()}]))
+                            my_labelinfo.config(text="Congrauluations  Book Issued SuccessFully")
+                            time.sleep(1)
+                            my_labelinfo.config(text="")
+                            tmsg.showinfo("Notice","Congrauluations  Book Issued SuccessFully")
+
+            break
+                    
+        else:
+            my_labelinfo.config(text="Sorry Unable To Find Book With Respective Book Id")
+            time.sleep(1)
+            my_labelinfo.config(text="")
+            print("Sorry Unable To Find Book With Respective Book Id")
 #Issue Book Function Is Closed
 def returnBook():
     for bookdp in fetchData():
@@ -94,29 +115,44 @@ def returnBook():
                     print("The Value of data is",data)
                     if data[0]==studentId.get():
                         print(data[0])
-                        print("Student Id Get equal to enter  Inout Id")
+                        print("Student Id Get equal to enter  Input Id")
                         returnStudentBookData(studentId.get(),{"bookid":bookid.get(),"dateOfIssued":dateIssued.get()})
                         returnUpdateBook(bookid.get())
                         break
                 else:
                     print("Unable To Fetch The Student")
+                    changeLabel("Unable to Fetch The Student")
                     break
             break
                 
     else:
-        print("Sorry Unable To Find Book With Respective Book Id")
+        changeLabel("Sorry Unable To Find Book With Respective Book Id")
+        print("")
 def knowStudent():
     print("Know Student Function is Running")
+    print("****************",studentId.get())
     mydata=returnSpecifictudentData(studentId.get())
     lbx_student_details.insert(END,f'Student ID:{mydata[0]}')
     lbx_student_details.insert(END,f'Student Name:{mydata[1]}')
     lbx_student_details.insert(END,f"Address:{mydata[2]}")
     lbx_student_details.insert(END,f"Phone No.{mydata[3]}")
-    print()
+    print("********************************************",mydata)
     if len(mydata)!=4:
+        myall=specificStudentDatawithDate(studentId.get())
+        i=0
+        k=4
+        colorlist=['red','green','yellow','lightgreen']
+        lbx_student_details.insert(END,"-----------------------------------------------------------------------")
         for key,value in mydata[4].items():
-            lbx_student_details.insert(END,f"Id :{key}:Book Name{value}")
-        
+            lbx_student_details.insert(END,f"Id :{key}")
+            lbx_student_details.insert(END,f"Book Name:{value}:")
+            lbx_student_details.insert(END,f"Date Of Issued:{myall[i]}")
+            new=datetime.strptime(myall[i],'%d/%m/%Y')
+            getOverDueDate=new+ timedelta(days=30)
+            lbx_student_details.insert(END,Label(text="Hello",fg='red').pack())
+            lbx_student_details.insert(END,f"Before Date:{getOverDueDate.day}/{getOverDueDate.month}/{getOverDueDate.year}")
+            lbx_student_details.insert(END,"-----------------------------------------------------------------------")
+            i+=1        
     pass
 Label(upperFrame,text="Book Management System",font=("arial",55,'bold')).pack()
 middle=Frame(root,borderwidth=8)
@@ -138,7 +174,7 @@ for row in fetchData():
         lbx.insert(ACTIVE,row[1])
 my_buttons=Frame(root,borderwidth=2)
 my_buttons.pack(anchor='n')
-Button(my_buttons,text="Issue Book",fg='white',bg='lightgreen',height=1,width=15,font='arial 13 bold',highlightbackground='red',highlightcolor="red", highlightthickness=2,command=issueBook).pack(side='left',padx=25)
+Button(my_buttons,text="Issue Book",fg='white',bg='lightgreen',height=1,width=15,font='arial 13 bold',highlightbackground='red',highlightcolor="red", highlightthickness=2,command=issueBookfunc).pack(side='left',padx=25)
 Button(my_buttons,text="Return Book",fg='white',bg='lightgreen',height=1,width=15,font='arial 13 bold',highlightbackground='red',highlightcolor="red", highlightthickness=2,command=returnBook).pack(side='left',padx=25)
 Button(my_buttons,text="Know Student",fg='white',bg='lightgreen',height=1,width=15,font='arial 13 bold',highlightbackground='red',highlightcolor="red", highlightthickness=2,command=knowStudent).pack(side='left',padx=25)
 Button(my_buttons,text="Exit",fg='white',bg='lightgreen',height=1,width=15,font='arial 13 bold',highlightbackground='red',highlightcolor="red", highlightthickness=2,command='exitfunc').pack(side='left',padx=25)
@@ -169,6 +205,8 @@ makeElement("Date Borrowed:",2,2,"dateIssued")
 makeElement("Date Due.:",3,0,"nOne")
 makeElement("Address 1:",3,2,"address")
 makeElement("Days on Book:",4,0,"days")
+my_labelinfo=Label(inf,text="",fg='red',font='arial 13 bold',bg='lightgreen')
+my_labelinfo.grid(row=6,column=2)
 
 getoverduelabel=Label(inf,text="Date Over Due",bg='lightgreen',font='arial 12 bold')
 getoverduelabel.grid(row=4,column=1,padx=20,pady=2)
